@@ -182,6 +182,7 @@ def main():
 
         plt.clf()
         plt.style.use('dark_background')
+        plt.grid(visible=True, alpha=0.1)
         plt.title(data[0].Name)
         graph_curve(data[0].Properties.FloatCurve.Keys)
 
