@@ -1,0 +1,3 @@
+[submodule "adjustText"]
+	path = adjustText
+	url = https://github.com/Phlya/adjustText.git
