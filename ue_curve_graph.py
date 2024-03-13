@@ -116,6 +116,7 @@ def graph_curve(curve: list[CurveKey]):
         margin_x, margin_y = plt.gca().margins()
         margin_x *= max_x - min_x
         margin_y *= max_y - min_y
+        plt.xlim(min_x - margin_x, max_x + margin_x)
         plt.ylim(min_y - margin_y, max_y + margin_y)
 
     min_x = curve[0].Time
@@ -160,6 +161,7 @@ def save_figure(in_file):
         out_file = args.output
 
     plt.savefig(out_file, dpi=args.dpi)
+    print(f"Wrote to {out_file}")
 
 def main():
     class JsonHook(dict):
