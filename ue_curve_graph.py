@@ -33,6 +33,7 @@ parser.add_argument("--x-acos",   action='store_true')
 parser.add_argument("--x-asin",   action='store_true')
 parser.add_argument("--x-suffix", type=str)
 parser.add_argument("--x-scale",  type=float)
+parser.add_argument("--x-add",    type=float)
 parser.add_argument("--x-min",    type=float)
 parser.add_argument("--x-max",    type=float)
 
@@ -40,6 +41,7 @@ parser.add_argument("--y-acos",   action='store_true')
 parser.add_argument("--y-asin",   action='store_true')
 parser.add_argument("--y-suffix", type=str)
 parser.add_argument("--y-scale",  type=float)
+parser.add_argument("--y-add",    type=float)
 parser.add_argument("--y-min",    type=float)
 parser.add_argument("--y-max",    type=float)
 
@@ -100,12 +102,14 @@ def graph_curve(curve: list[CurveKey]):
         if args.x_acos: x = math.acos(x) * 180 / math.pi
         if args.x_asin: x = math.asin(x) * 180 / math.pi
         if args.x_scale is not None: x *= args.x_scale
+        if args.x_add   is not None: x += args.x_add
         return x
 
     def translate_y(y: float) -> float:
         if args.y_acos: y = math.acos(y) * 180 / math.pi
         if args.y_asin: y = math.asin(y) * 180 / math.pi
         if args.y_scale is not None: y *= args.y_scale
+        if args.y_add   is not None: y += args.y_add
         return y
 
     def apply_axis_limits(graph_x: list[float], graph_y: list[float]):
