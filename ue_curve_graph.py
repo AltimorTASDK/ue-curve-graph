@@ -138,16 +138,19 @@ def graph_curve(curve: list[CurveKey]):
     for x, y in points:
         plt.plot(x, y, "o", color='tomato')
 
-    points_x = [x for x, y in points]
-    points_y = [y for x, y in points]
-    is_x_axis_ints = all(round(x, 4) == round(x) for x in points_x)
-    is_y_axis_ints = all(round(y, 4) == round(y) for y in points_y)
     min_y, max_y = plt.ylim()
     text_offset = (max_y - min_y) * 0.05
 
+    PRECISION = 3
+
+    points_x = [x for x, y in points]
+    points_y = [y for x, y in points]
+    is_x_axis_ints = all(round(x, PRECISION) == round(x) for x in points_x)
+    is_y_axis_ints = all(round(y, PRECISION) == round(y) for y in points_y)
+
     def format_xy(x: float, y: float) -> str:
-        text_x = f"{x:z.0f}" if is_x_axis_ints else str(round_f32(x, 4))
-        text_y = f"{y:z.0f}" if is_y_axis_ints else str(round_f32(y, 4))
+        text_x = f"{x:z.0f}" if is_x_axis_ints else str(round_f32(x, PRECISION))
+        text_y = f"{y:z.0f}" if is_y_axis_ints else str(round_f32(y, PRECISION))
         if args.x_suffix: text_x += args.x_suffix
         if args.y_suffix: text_y += args.y_suffix
         return f"({text_x}, {text_y})"
