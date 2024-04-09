@@ -2,6 +2,7 @@ import argparse
 import json
 import math
 import matplotlib.pyplot as plt
+import os
 import sys
 from adjustText.adjustText import adjust_text
 from decimal import Decimal
@@ -177,15 +178,12 @@ def graph_curve(curve: list[CurveKey]):
 
 def save_figure(in_file):
     if args.output is DEFAULT_OUTPUT:
-        if in_file.name.endswith(".json"):
-            out_file = f"{in_file.name[:-5]}.png"
-        else:
-            out_file = f"{in_file.name}.png"
+        out_file = open(f"{os.path.splitext(in_file.name)[0]}.png", "wb")
     else:
         out_file = args.output
 
     plt.savefig(out_file, dpi=args.dpi)
-    print(f"Wrote to {out_file}")
+    print(f"Wrote to {out_file.name}")
 
 def main():
     class JsonHook(dict):
