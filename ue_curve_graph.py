@@ -24,10 +24,14 @@ parser.add_argument("-o", "--output",
                     type=argparse.FileType("wb"),
                     const=DEFAULT_OUTPUT)
 
-parser.add_argument("--dpi",      type=float,
-                                  default=200)
-parser.add_argument("--samples",  type=int,
-                                  default=1000)
+parser.add_argument("--dpi",     type=float,
+                                 default=200)
+parser.add_argument("--samples", type=int,
+                                 default=1000)
+
+parser.add_argument("-x", "--label", type=float,
+                                     action='append',
+                                     default=[])
 
 parser.add_argument("--x-acos",   action='store_true')
 parser.add_argument("--x-asin",   action='store_true')
@@ -48,6 +52,8 @@ parser.add_argument("--y-max",    type=float)
 args = parser.parse_args()
 
 ONE_THIRD = float32(1 / 3)
+
+Point = tuple[float, float]
 
 class CurveKey:
     Time: float32
@@ -112,6 +118,12 @@ def graph_curve(curve: list[CurveKey]):
         if args.y_add   is not None: y += args.y_add
         return y
 
+    def translate_point(point: Point) -> Point:
+        return (translate_x(point[0]), translate_y(point[1]))
+
+    def translate_points(points: list[Point]) -> list[Point]:
+        return [*map(translate_point, points)]
+
     def apply_axis_limits(graph_x: list[float], graph_y: list[float]):
         min_x = min(graph_x) if args.x_min is None else args.x_min
         max_x = max(graph_x) if args.x_max is None else args.x_max
@@ -134,19 +146,23 @@ def graph_curve(curve: list[CurveKey]):
     apply_axis_limits(graph_x, graph_y)
     plt.plot(graph_x, graph_y, color='tomato')
 
-    points = [(translate_x(key.Time), translate_y(key.Value)) for key in curve]
-    for x, y in points:
+    key_points = translate_points([(key.Time, key.Value) for key in curve])
+    for x, y in key_points:
         plt.plot(x, y, "o", color='tomato')
 
+    labels = translate_points([(x, eval_curve(curve, x)) for x in args.label])
+    for x, y in labels:
+        plt.plot(x, y, "o", color='deepskyblue')
+
+    points = key_points + labels
+
     min_y, max_y = plt.ylim()
-    text_offset = (max_y - min_y) * 0.05
+    text_offset = (max_y - min_y) * 0.01
 
     PRECISION = 3
 
-    points_x = [x for x, y in points]
-    points_y = [y for x, y in points]
-    is_x_axis_ints = all(round(x, PRECISION) == round(x) for x in points_x)
-    is_y_axis_ints = all(round(y, PRECISION) == round(y) for y in points_y)
+    is_x_axis_ints = all(round(x, PRECISION) == round(x) for x, y in points)
+    is_y_axis_ints = all(round(y, PRECISION) == round(y) for x, y in points)
 
     def format_xy(x: float, y: float) -> str:
         text_x = f"{x:z.0f}" if is_x_axis_ints else str(round_f32(x, PRECISION))
@@ -156,7 +172,8 @@ def graph_curve(curve: list[CurveKey]):
         return f"({text_x}, {text_y})"
 
     adjust_text([plt.text(x, y + text_offset, format_xy(x, y), size='x-small')
-                 for x, y in points])
+                 for x, y in points],
+                force_explode=(0.05, 0.3))
 
 def save_figure(in_file):
     if args.output is DEFAULT_OUTPUT:
@@ -190,6 +207,7 @@ def main():
             raise ValueError("Not a UCurveFloat.")
 
         plt.clf()
+        plt.gcf().set_dpi(args.dpi)
         plt.style.use('dark_background')
         plt.grid(visible=True, alpha=0.1)
         plt.title(data[0].Name)
