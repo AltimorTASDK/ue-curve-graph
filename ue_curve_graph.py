@@ -25,10 +25,10 @@ parser.add_argument("-o", "--output",
                     type=argparse.FileType("wb"),
                     const=DEFAULT_OUTPUT)
 
-parser.add_argument("--dpi",     type=float,
-                                 default=200)
-parser.add_argument("--samples", type=int,
-                                 default=1000)
+parser.add_argument("--curve-path", type=str,   default="FloatCurve")
+parser.add_argument("--title",      type=str,   default=None)
+parser.add_argument("--dpi",        type=float, default=200)
+parser.add_argument("--samples",    type=int,   default=1000)
 
 parser.add_argument("-x", "--label", type=float,
                                      action='append',
@@ -176,14 +176,25 @@ def graph_curve(curve: list[CurveKey]):
                  for x, y in points],
                 force_explode=(0.05, 0.3))
 
-def save_figure(in_file):
+def save_figure(default_name):
     if args.output is DEFAULT_OUTPUT:
-        out_file = open(f"{os.path.splitext(in_file.name)[0]}.png", "wb")
+        out_file = open(f"{default_name}.png", "wb")
     else:
         out_file = args.output
-
     plt.savefig(out_file, dpi=args.dpi)
     print(f"Wrote to {out_file.name}")
+
+def get_curve_keys(properties):
+    for key in args.curve_path.split("."):
+        if key not in properties:
+            raise ValueError(f"Failed to find property \"{key}\""
+                             f"from path \"{args.curve_path}\"")
+        properties = properties[key]
+    if "EditorCurveData" in properties:
+        properties = properties["EditorCurveData"]
+    if "Keys" in properties:
+        properties = properties["Keys"]
+    return properties
 
 def main():
     class JsonHook(dict):
@@ -194,27 +205,29 @@ def main():
         def __getattr__(self, name):
             return self[name]
 
+    if not args.input:
+        return
+
+    default_name = os.path.splitext(args.input[0].name)[0]
+
+    plt.clf()
+    plt.gcf().set_dpi(args.dpi)
+    plt.style.use('dark_background')
+    plt.grid(visible=True, alpha=0.1)
+    plt.title(args.title if args.title is not None else default_name)
+
     for in_file in args.input:
         data = json.load(in_file, object_hook=JsonHook)
-
         if not hasattr(data, '__len__') or len(data) != 1:
             raise ValueError("Expected a single-element array as json root.")
         if any(attr not in data[0] for attr in ['Name', 'Properties']):
             raise ValueError("Not a recognized FModel json.")
-        if 'FloatCurve' not in data[0].Properties:
-            raise ValueError("Not a UCurveFloat.")
+        graph_curve(get_curve_keys(data[0].Properties))
 
-        plt.clf()
-        plt.gcf().set_dpi(args.dpi)
-        plt.style.use('dark_background')
-        plt.grid(visible=True, alpha=0.1)
-        plt.title(data[0].Name)
-        graph_curve(data[0].Properties.FloatCurve.Keys)
-
-        if args.output is None:
-            plt.show()
-        else:
-            save_figure(in_file)
+    if args.output is None:
+        plt.show()
+    else:
+        save_figure(default_name)
 
 if __name__ == "__main__":
     main()
