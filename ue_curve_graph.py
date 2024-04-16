@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("input",
                     nargs='*',
                     type=argparse.FileType("r"),
-                    default=sys.stdin)
+                    default=[sys.stdin])
 
 parser.add_argument("-o", "--output",
                     nargs='?',
@@ -188,7 +188,7 @@ def get_curve_keys(properties):
     for key in args.curve_path.split("."):
         if key not in properties:
             raise ValueError(f"Failed to find property \"{key}\""
-                             f"from path \"{args.curve_path}\"")
+                             f" from path \"{args.curve_path}\"")
         properties = properties[key]
     if "EditorCurveData" in properties:
         properties = properties["EditorCurveData"]
@@ -204,9 +204,6 @@ def main():
                 case value:    return value
         def __getattr__(self, name):
             return self[name]
-
-    if not args.input:
-        return
 
     default_name = os.path.splitext(args.input[0].name)[0]
 
