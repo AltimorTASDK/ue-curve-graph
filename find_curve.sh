@@ -1,0 +1,1 @@
+find "$TOPAZ/Content" -type f -name "$1.json" -exec python ue_curve_graph.py {} ${@:2} \;
